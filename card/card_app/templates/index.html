@@ -1,0 +1,75 @@
+{# Load the tag library #}
+{% load static %}
+{% load bootstrap4 %}
+
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript jquery='full' %}
+
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!--    <script src="{% static 'admin/package/dist/sweetalert2.all.min.js' %}"></script>-->
+<!--    <script src="{% static 'admin/package/dist/sweetalert2.min.js' %}"></script>-->
+
+    <!-- Bootstrap CSS -->
+    <title>Card</title>
+      <style>
+      html {
+          -webkit-box-sizing: border-box;
+          -moz-box-sizing: border-box;
+          box-sizing: border-box;
+        }
+        *, *:before, *:after {
+          -webkit-box-sizing: inherit;
+          -moz-box-sizing: inherit;
+          box-sizing: inherit;
+          }
+      .content-wrapper{
+        background-color: #08AEEA;
+        background-image: linear-gradient(0deg, #2AF598 0%, #08AEEA 100%);
+       }
+      </style>
+  </head>
+  <body class="content-wrapper">
+    <nav class="navbar sticky-top navbar-dark bg-dark justify-content-between">
+      <a class="navbar-brand">Navbar</a>
+      <form class="form-inline">
+        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+      </form>
+    </nav>
+
+    <div class="row justify-content-center m-2">
+      {% block content %}
+      <div class="col-4">
+          <div class="card">
+              <div class="card-header">
+                  <div class="card-title text-center">
+                      <h2> Add Card</h2>
+                  </div>
+              </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                        <div class="col-md-12">{% bootstrap_field form.card_title set_placeholder=False %}</div>
+                        <div class="col-md-12">{% bootstrap_field form.card_text set_placeholder=False %}</div>
+                        <div class="col-md-12"><button type="submit" class="btn btn-success btn-lg">Add New Card</button> </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+      </div>
+      {% endblock %}
+    </div>
+<!--    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<!--    <script src="{% static 'admin/package/dist/sweetalert2.all.min.js' %}"></script>-->
+<!--    <script src="{% static 'admin/package/dist/sweetalert2.min.js' %}"></script>-->
+    {% block javascript %}
+    {% endblock %}
+  </body>
+</html>

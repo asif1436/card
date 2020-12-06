@@ -1,0 +1,182 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load bootstrap4 %}
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
+
+{% block content %}
+    <div class="col-md-3">
+      <div class="card">
+          <div class="card-header">
+              <div class="card-title text-center">
+                  <h2> Add Card</h2>
+              </div>
+          </div>
+          <div class="card-body">
+              <form id="submit_form" value="{% url 'card_add' %}">
+                  <div class="row">
+                <div class="col-md-12">{% bootstrap_field card_form.card_title set_placeholder=False %}</div>
+                <div class="col-md-12">{% bootstrap_field card_form.card_text set_placeholder=False %}</div>
+                <div class="col-md-12"><button type="submit" value="{% url 'card_add' %}" class="btn btn-success btn-md">Add New Card</button> </div>
+                </div>
+              </form>
+          </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card">
+          <div class="card-header">
+              <div class="card-title text-center">
+                  <h2> All Available Cards</h2>
+              </div>
+          </div>
+          <div class="card-body">
+              <div class="row" id="card_body">
+                  {% for form in card_data %}
+                  <div class="col-sm-4">
+                    <div class="card mb-2" >
+                      <div class="card-body">
+                        <h5 class="card-title" id="card_title{{ form.id }}">{{ form.card_title }}</h5>
+                          <p>
+                              <a value = "{% url 'card_delete' form.id %}" class="btn btn-sm btn-danger swalDefaultSuccess">Remove It!</a>
+                              <button class="btn btn-sm btn-primary" data-toggle="collapse" data-target="#collapseExample{{ form.id }}">Show Text!</button>
+                          </p>
+                          <div class="row">
+                              <div class="col">
+                                <div class="collapse" id="collapseExample{{ form.id }}">
+                                  <div class="card card-body">
+                                    {{ form.card_text }}
+                                  </div>
+                                </div>
+                              </div>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+              </div>
+          </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+      const swalWithBootstrapButtons = Swal.mixin({
+      customClass: {
+        confirmButton: 'btn btn-success',
+        cancelButton: 'btn btn-danger'
+      },
+      buttonsStyling: false
+    })
+
+       $('.swalDefaultSuccess').click(function() {
+      var url = $(this).attr('value')
+      swalWithBootstrapButtons.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'No, cancel!',
+      reverseButtons: true,
+      }).then((result) => {
+        if (result.value) {
+          window.location = url;
+          swalWithBootstrapButtons.fire(
+            'Deleted!',
+            'Your file has been deleted.',
+            'success'
+          )
+        }
+        else if (
+          /* Read more about handling dismissals below */
+          result.dismiss === Swal.DismissReason.cancel
+        ) {
+          swalWithBootstrapButtons.fire(
+            'Cancelled',
+            'Your imaginary file is safe :)',
+            'error'
+          )
+        }
+      })
+    })
+
+
+  $(document).on('submit', '#submit_form', function(e){
+    e.preventDefault();
+    var output = "";
+    var url = '/ajax-add/'
+    var card_title = $(id_card_title).val()
+    var card_text = $(id_card_text).val()
+    $.ajax({
+    type : 'POST',
+    url: url,
+    data: {
+    csrfmiddlewaretoken : '{{ csrf_token }}',
+    card_title : card_title,
+    card_text : card_text,
+    },
+    success: function(data){
+    if(data[0]['fields']){
+        for(i=0; i<data.length; i++){
+        output += "<div class='col-sm-4'> <div class='card mb-2'> <div class='card-body'> <h5 class='card-title'>"+
+        data[i]['fields']['card_title']+
+        "</h5> <p> <a value = /card-delete/"+data[i]['pk']+
+        "/ class='btn btn-sm btn-danger swalDefaultSuccess'>Remove It!</a> <button class='btn btn-sm btn-primary' data-toggle='collapse' data-target=#collapseExample"+data[i]['pk']+">Show Text!</button> </p><div class='row'><div class='col'><div class='collapse' id=collapseExample"+data[i]['pk']+"> <div class='card card-body'>"+
+        data[i]['fields']['card_text']+
+        " </div> </div> </div> </div> </div> </div> </div>"
+        }
+        $('#card_body').html(output)
+        $('#submit_form')[0].reset()
+        const swalWithBootstrapButtons = Swal.mixin({
+      customClass: {
+        confirmButton: 'btn btn-success',
+        cancelButton: 'btn btn-danger'
+      },
+      buttonsStyling: false
+    })
+
+       $('.swalDefaultSuccess').click(function() {
+      var url = $(this).attr('value')
+      swalWithBootstrapButtons.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+
+      cancelButtonText: 'No, cancel!',
+      reverseButtons: true,
+      }).then((result) => {
+        if (result.value) {
+          window.location = url;
+          swalWithBootstrapButtons.fire(
+            'Deleted!',
+            'Your file has been deleted.',
+            'success'
+          )
+        }
+        else if (
+          /* Read more about handling dismissals below */
+          result.dismiss === Swal.DismissReason.cancel
+        ) {
+          swalWithBootstrapButtons.fire(
+            'Cancelled',
+            'Your imaginary file is safe :)',
+            'error'
+          )
+        }
+      })
+    })
+      }
+    else{
+        Swal.fire('Card exist')
+        $('#submit_form')[0].reset()
+        }
+      }
+    })
+  })
+
+  </script>
+{% endblock %}
