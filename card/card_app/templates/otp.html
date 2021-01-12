@@ -1,0 +1,68 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load bootstrap4 %}
+
+{% block content %}
+<div class="col-4">
+  <div class="card">
+      <div class="card-header">
+          <div class="card-title text-center">
+              <h2> Enter OTP </h2>
+          </div>
+      </div>
+        <div class="card-body">
+            <p id="counter" class="btn btn-success btn-lg"> 1:00 </p>
+            <form action="/verify-user/" method="post">
+                {% csrf_token %}
+                <label for="user_otp"></label>
+                <input type="number" id="user_otp" name="otp" placeholder="Enter Your OTP"><br><br>
+                <button type="submit" class="btn btn-success btn-md">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+
+<script>
+    const startingMinutes = 1;
+    let time = startingMinutes * 60;
+
+    const countDown = document.getElementById('counter')
+
+    var myVar = setInterval(updateCountDown, 1000);
+    setTimeout(expiryOTP, 60000)
+
+    function updateCountDown(){
+        const minutes = Math.floor(time/60);
+        let seconds = time % 60;
+
+        seconds = seconds < 10 ? '0'+seconds : seconds
+
+        countDown.innerHTML = `${minutes} : ${seconds}`;
+        time--;
+
+    }
+
+    function expiryOTP(){
+        clearInterval(myVar)
+        var url = '/expiry-otp/'
+        $.ajax({
+        type : 'POST',
+        url: url,
+        data: {
+        csrfmiddlewaretoken : '{{ csrf_token }}',
+        otp : {{ otp }},
+        },
+        success: function(data){
+            countDown.innerHTML = data;
+
+        }
+        })
+    }
+
+
+</script>
+
+{% endblock %}

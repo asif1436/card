@@ -39,8 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'card_app',
     'bootstrap4',
-    'sweetify',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'django_crontab',
 ]
+
+AUTH_USER_MODEL = 'card_app.MyUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -50,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_otp.middleware.OTPMiddleware',
 ]
 
 ROOT_URLCONF = 'card.urls'
@@ -69,6 +74,16 @@ TEMPLATES = [
         },
     },
 ]
+
+
+# SMTP EMAIL Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'itskngtravels@gmail.com'
+EMAIL_HOST_PASSWORD = 'kng1@sif'
+EMAIL_USE_TLS = True
+
 
 WSGI_APPLICATION = 'card.wsgi.application'
 
@@ -110,7 +125,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -121,6 +136,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
-
+CRONJOBS = [
+    ('*/2 * * * *', 'card_app.cron.my_scheduled_job')
+]
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
