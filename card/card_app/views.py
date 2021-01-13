@@ -17,7 +17,7 @@ from .forms import CardForm
 from .models import Card, OTP, MyUser
 
 
-def otp_generate(request, user):
+def otp_generate(request):
     """
     Generate OTP on user authenticated
     :param request:
@@ -25,7 +25,6 @@ def otp_generate(request, user):
     :return:
     """
     otp = random.randint(100000, 999999)
-    request.session[str(otp)] = user
     return otp
 
 
@@ -36,7 +35,7 @@ def otp_expiry(request):
     :return:
     """
     active_otp = OTP.objects.filter(
-        timestamp__lt=timezone.now() - timezone.timedelta(minutes=1),
+        timestamp__lt=timezone.now() - timezone.timedelta(minutes=2),
         is_active=True)
     for at in active_otp:
         at.is_active = False
@@ -51,18 +50,25 @@ def user_login(request):
     :return: student detail page
     """
     if request.method == "POST":
-        email = request.POST["email"]
+        email = request.POST["user"]
         password = request.POST["password"]
         user = authenticate(request, email=email, password=password)
         if user is not None:
-            otp = otp_generate(request, email)
+            otp = otp_generate(request)
             OTP.objects.create(user=user, otp=otp)
-            message1 = ('OTP', 'Your OTP: '+str(otp), settings.EMAIL_HOST_USER, [email,])
+            message1 = (
+            'OTP', 'Your OTP: ' + str(otp), settings.EMAIL_HOST_USER,
+            [email, ])
             send_mass_mail((message1,), fail_silently=False)
             messages.success(request, 'OTP sent to your Email')
-            return render(request, 'otp.html', {'otp': otp})
+            context = {
+                'otp': otp,
+                'user': user,
+                'password': password,
+            }
+            return render(request, 'otp.html', context)
         messages.error(request, 'Email or Password incorrect')
-        return HttpResponseRedirect(reverse('login',))
+        return HttpResponseRedirect(reverse('login', ))
 
     return render(request, 'login.html')
 
@@ -74,21 +80,22 @@ def verify_user_with_otp(request):
     :return:
     """
     if request.method == "POST":
-        user_enter_otp = request.POST['otp']
-        try:
-            user_otp = OTP.objects.get(otp=user_enter_otp, is_active=True)
-        except ObjectDoesNotExist:
-            messages.error(request, "OTP Expired")
-            return render(request, 'otp.html')
+        otp = int(request.POST["otp"])
+        user_email = request.POST['user']
+        if OTP.objects.filter(otp=otp).exists():
+            try:
+                user_otp = OTP.objects.get(otp=otp, is_active=True)
+            except ObjectDoesNotExist:
+                return HttpResponse('OTP is Expired')
+            else:
+                user = MyUser.objects.get(email=user_email)
+                login(request, user,
+                      backend='django.contrib.auth.backends.ModelBackend')
+                user_otp.is_active = False
+                user_otp.save()
+                return HttpResponse('url')
         else:
-            user_email = request.session[str(user_enter_otp)]
-            user = MyUser.objects.get(email=user_email)
-            login(request, user)
-            user_otp.is_active=False
-            user_otp.save()
-            return HttpResponseRedirect(reverse('card_add',))
-    messages.error(request, "OTP Expired")
-    return render(request, 'otp.html')
+            return HttpResponse('Your OTP is incorrect')
 
 
 @login_required(login_url='/')
@@ -123,6 +130,7 @@ def card_add(request):
     }
     return render(request, 'card_add.html', context)
 
+
 @login_required(login_url='login/')
 def card_view(request):
     """
@@ -131,7 +139,7 @@ def card_view(request):
     :return:
     """
     card_data = Card.objects.all().order_by('-id')
-    print("##"*20)
+    print("##" * 20)
     print(card_data)
     print(type(card_data[0]))
     print(type(card_data))

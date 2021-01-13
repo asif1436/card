@@ -114,10 +114,3 @@ class OTP(models.Model):
         :return: user.
         """
         return str(self.user)
-
-    def inactive_otp(self):
-        active_otp = OTP.objects.filter(
-            timestamp__lt=timezone.now() - timezone.timedelta(minutes=1),
-            is_active=True)
-        for at in active_otp:
-            at.is_active = False

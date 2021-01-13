@@ -7,7 +7,6 @@ admin.site.register(Card)
 
 admin.site.register(MyUser)
 
-
 class OTPAdmin(admin.ModelAdmin):
     list_display = ("user", "otp", "timestamp", "is_active")
 

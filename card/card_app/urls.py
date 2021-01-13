@@ -11,5 +11,6 @@ urlpatterns = [
     path('card-delete/<int:id>/', card_delete, name='card_delete'),
     path('ajax-add/', ajax_call, name='add_card_by_ajax'),
     path('expiry-otp/', otp_expiry, name='expiry_otp'),
+    #path('resend-otp/', resend_otp, name='resend_otp'),
 ]
 

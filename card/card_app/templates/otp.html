@@ -3,7 +3,7 @@
 {% load bootstrap4 %}
 
 {% block content %}
-<div class="col-4">
+<div class="col-3">
   <div class="card">
       <div class="card-header">
           <div class="card-title text-center">
@@ -11,12 +11,37 @@
           </div>
       </div>
         <div class="card-body">
-            <p id="counter" class="btn btn-success btn-lg"> 1:00 </p>
-            <form action="/verify-user/" method="post">
+            <div id="counter" class="alert alert-dark text-center" role="alert">
+              2 : 00
+            </div>
+            <div id='msg' class="alert alert-info" role="alert" style="display:none">
+            </div>
+            <form method="post">
                 {% csrf_token %}
-                <label for="user_otp"></label>
-                <input type="number" id="user_otp" name="otp" placeholder="Enter Your OTP"><br><br>
-                <button type="submit" class="btn btn-success btn-md">Submit</button>
+                <div class="input-group mb-3">
+                  <input id="name" type="hidden" class="form-control" name="user" value="{{ user }}">
+                </div>
+                <div class="input-group mb-3">
+                  <input id="password" type="hidden" class="form-control" name="password" value="{{ password }}">
+                </div>
+                <div class="input-group mb-3">
+                  <input id="otp" type="text" class="form-control" name="otp" placeholder="Enter OTP">
+                  <div class="input-group-append">
+                    <div class="input-group-text">
+                      <span class="fas fa-lock"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-6">
+                    <button type="button" onclick="verifyOTP()" class="btn btn-primary btn-block">Submit</button>
+                  </div>
+                  <!-- /.col -->
+                  <div class="col-6">
+                    <button type="submit" class="btn btn-primary btn-block">Resend</button>
+                  </div>
+                  <!-- /.col -->
+                </div>
             </form>
         </div>
     </div>
@@ -26,13 +51,23 @@
 {% block javascript %}
 
 <script>
-    const startingMinutes = 1;
+    var interval;
+    var timer;
+    function myFunction() {
+        interval = setInterval(updateCountDown, 1000);
+        timer = setTimeout(expiryOTP, 120000);
+    }
+
+    myFunction();
+
+
+    const startingMinutes = 2;
     let time = startingMinutes * 60;
 
     const countDown = document.getElementById('counter')
+    const username = document.getElementById('name').value
+    const password = document.getElementById('password').value
 
-    var myVar = setInterval(updateCountDown, 1000);
-    setTimeout(expiryOTP, 60000)
 
     function updateCountDown(){
         const minutes = Math.floor(time/60);
@@ -46,22 +81,45 @@
     }
 
     function expiryOTP(){
-        clearInterval(myVar)
+        clearInterval(interval)
         var url = '/expiry-otp/'
         $.ajax({
         type : 'POST',
         url: url,
         data: {
         csrfmiddlewaretoken : '{{ csrf_token }}',
-        otp : {{ otp }},
         },
         success: function(data){
-            countDown.innerHTML = data;
+            countDown.innerHTML = "OTP Expired"
 
         }
         })
     }
 
+
+    function verifyOTP() {
+        var url = '/verify-user/'
+        $.ajax({
+        type : 'POST',
+        url: url,
+        data: {
+        csrfmiddlewaretoken : "{{ csrf_token }}",
+        otp : document.getElementById('otp').value,
+        user : username,
+        },
+        success: function(data){
+            console.log(data)
+            if (data == 'url'){
+                window.location.replace("/");
+            }
+            else {
+                $('#msg').html(data).fadeIn('slow');
+                //$('#msg').html("data insert successfully").fadeIn('slow') //also show a success message
+                $('#msg').delay(5000).fadeOut('slow');
+            }
+        },
+        })
+    }
 
 </script>
 
